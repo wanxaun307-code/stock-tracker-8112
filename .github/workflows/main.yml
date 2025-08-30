@@ -1,0 +1,38 @@
+name: Stock Tracker 8112
+
+on:
+  schedule:
+    - cron: '2 2 * * 1-5'   # 每天台灣時間 10:00 執行，週一到週五
+  workflow_dispatch:         # 允許手動觸發
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install yfinance pandas
+
+      - name: Run script
+        run: |
+          python 8112_check.py
+
+      - name: Send mail with result
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "📈 8112 至上 自動檢查結果"
+          to: ${{ secrets.MAIL_TO }}
+          from: GitHub Actions <${{ secrets.SMTP_USERNAME }}>
+          body_file: result.txt
